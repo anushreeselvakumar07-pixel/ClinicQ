@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>ClinicQ - Doctor Dashboard</title>
+
+    <link rel="stylesheet"
+          href="/css/style.css">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<!-- =========================
+     SIDEBAR
+========================= -->
+
+<div class="sidebar">
+
+    <div class="sidebar-brand">
+        🏥 ClinicQ
+    </div>
+
+    <div class="sidebar-role">
+        DOCTOR
+    </div>
+
+
+    <a href="/index.html"
+       class="sidebar-link">
+
+        🏠 Home
+
+    </a>
+
+
+    <a href="/admin-dashboard.html"
+       class="sidebar-link">
+
+        ⚙️ Admin
+
+    </a>
+
+
+    <a href="/doctor-dashboard.html"
+       class="sidebar-link active">
+
+        👨‍⚕️ Doctor
+
+    </a>
+
+
+    <a href="/patient-dashboard.html"
+       class="sidebar-link">
+
+        👤 Patient
+
+    </a>
+
+</div>
+
+
+<!-- =========================
+     MAIN CONTENT
+========================= -->
+
+<div class="main-content">
+
+
+    <!-- HEADER -->
+
+    <div class="top-header">
+
+        <div>
+
+            <h1>
+                Doctor Dashboard
+            </h1>
+
+            <p>
+                View doctor appointments by date
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         DOCTOR & DATE SELECTION
+    ========================== -->
+
+    <div class="content-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Appointment Search
+                </h2>
+
+                <p>
+                    Select a doctor and date
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-grid">
+
+
+            <!-- DOCTOR -->
+
+            <div class="form-group">
+
+                <label>
+                    Select Doctor
+                </label>
+
+                <select id="doctorSelect">
+
+                    <option value="">
+                        Select Doctor
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- DATE -->
+
+            <div class="form-group">
+
+                <label>
+                    Select Date
+                </label>
+
+                <input
+                        type="date"
+                        id="appointmentDate">
+
+            </div>
+
+
+            <!-- SEARCH BUTTON -->
+
+            <button
+                    type="button"
+                    id="viewAppointmentsBtn"
+                    class="btn primary-btn">
+
+                View Appointments
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         DOCTOR PROFILE
+    ========================== -->
+
+    <div class="content-card"
+         id="doctorProfileCard"
+         style="display:none;">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Doctor Profile
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div>
+
+            <h3 id="doctorName">
+                -
+            </h3>
+
+            <p id="doctorSpecialization">
+                -
+            </p>
+
+            <p>
+                Doctor ID:
+                <strong id="doctorId">
+                    -
+                </strong>
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         APPOINTMENTS
+    ========================== -->
+
+    <div class="content-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Appointments
+                </h2>
+
+                <p id="appointmentHeading">
+                    Select a doctor and date to view appointments
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div id="appointmentContainer">
+
+            <div style="
+                text-align:center;
+                padding:30px;
+            ">
+
+                <div style="
+                    font-size:40px;
+                ">
+                    📅
+                </div>
+
+                <h3>
+                    No date selected
+                </h3>
+
+                <p>
+                    Select a doctor and date above.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- =========================
+     JAVASCRIPT
+========================= -->
+
+<script>
+
+
+    /* ==========================================
+       LOAD DOCTORS
+    ========================================== */
+
+    async function loadDoctors() {
+
+        const doctorSelect =
+            document.getElementById(
+                "doctorSelect"
+            );
+
+
+        try {
+
+            const response =
+                await fetch("/api/doctors");
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Unable to load doctors"
+                );
+
+            }
+
+
+            const doctors =
+                await response.json();
+
+
+            doctorSelect.innerHTML = `
+
+                <option value="">
+                    Select Doctor
+                </option>
+
+            `;
+
+
+            doctors.forEach(doctor => {
+
+                doctorSelect.innerHTML += `
+
+                    <option value="${doctor.id}">
+
+                        ${doctor.name}
+                        -
+                        ${doctor.specialization}
+
+                    </option>
+
+                `;
+
+            });
+
+        }
+
+        catch(error) {
+
+            console.error(
+                "Doctor loading error:",
+                error
+            );
+
+
+            doctorSelect.innerHTML = `
+
+                <option value="">
+                    Unable to load doctors
+                </option>
+
+            `;
+
+        }
+
+    }
+
+
+
+    /* ==========================================
+       DOCTOR SELECTION
+    ========================================== */
+
+    document
+        .getElementById("doctorSelect")
+        .addEventListener(
+            "change",
+            function() {
+
+                const selectedDoctorId =
+                    this.value;
+
+
+                const selectedOption =
+                    this.options[
+                        this.selectedIndex
+                    ];
+
+
+                if (!selectedDoctorId) {
+
+                    document
+                        .getElementById(
+                            "doctorProfileCard"
+                        )
+                        .style.display = "none";
+
+                    return;
+
+                }
+
+
+                const doctorText =
+                    selectedOption.text;
+
+
+                const doctorParts =
+                    doctorText.split(" - ");
+
+
+                document
+                    .getElementById(
+                        "doctorProfileCard"
+                    )
+                    .style.display = "block";
+
+
+                document
+                    .getElementById(
+                        "doctorId"
+                    )
+                    .textContent =
+                        selectedDoctorId;
+
+
+                document
+                    .getElementById(
+                        "doctorName"
+                    )
+                    .textContent =
+                        doctorParts[0];
+
+
+                document
+                    .getElementById(
+                        "doctorSpecialization"
+                    )
+                    .textContent =
+                        doctorParts[1] || "";
+
+            }
+        );
+
+
+
+    /* ==========================================
+       VIEW APPOINTMENTS
+    ========================================== */
+
+    document
+        .getElementById(
+            "viewAppointmentsBtn"
+        )
+        .addEventListener(
+            "click",
+            async function() {
+
+
+                const doctorId =
+                    document.getElementById(
+                        "doctorSelect"
+                    ).value;
+
+
+                const date =
+                    document.getElementById(
+                        "appointmentDate"
+                    ).value;
+
+
+                const container =
+                    document.getElementById(
+                        "appointmentContainer"
+                    );
+
+
+                const heading =
+                    document.getElementById(
+                        "appointmentHeading"
+                    );
+
+
+                /* CHECK DOCTOR */
+
+                if (!doctorId) {
+
+                    alert(
+                        "Please select a doctor."
+                    );
+
+                    return;
+
+                }
+
+
+                /* CHECK DATE */
+
+                if (!date) {
+
+                    alert(
+                        "Please select a date."
+                    );
+
+                    return;
+
+                }
+
+
+                try {
+
+                    container.innerHTML = `
+
+                        <div style="
+                            text-align:center;
+                            padding:30px;
+                        ">
+
+                            <p>
+                                Loading appointments...
+                            </p>
+
+                        </div>
+
+                    `;
+
+
+                    const response =
+                        await fetch(
+                            `/api/appointments/doctor/${doctorId}/date/${date}`
+                        );
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            "Unable to load appointments"
+                        );
+
+                    }
+
+
+                    const appointments =
+                        await response.json();
+
+
+                    /* UPDATE HEADING */
+
+                    heading.textContent =
+                        "Appointments for "
+                        + date;
+
+
+                    container.innerHTML = "";
+
+
+                    /* ==================================
+                       NO APPOINTMENTS
+                    ================================== */
+
+                    if (
+                        appointments.length === 0
+                    ) {
+
+                        container.innerHTML = `
+
+                            <div style="
+                                text-align:center;
+                                padding:30px;
+                            ">
+
+                                <div style="
+                                    font-size:40px;
+                                ">
+                                    📋
+                                </div>
+
+                                <h3>
+                                    No Appointments
+                                </h3>
+
+                                <p>
+                                    There are no appointments
+                                    for the selected doctor
+                                    on ${date}.
+                                </p>
+
+                            </div>
+
+                        `;
+
+                        return;
+
+                    }
+
+
+                    /* ==================================
+                       DISPLAY APPOINTMENTS
+                    ================================== */
+
+                    appointments.forEach(
+                        appointment => {
+
+
+                            const patient =
+                                appointment.patient
+                                    ? appointment.patient.name
+                                    : "Unknown Patient";
+
+
+                            const patientEmail =
+                                appointment.patient
+                                    ? appointment.patient.email
+                                    : "-";
+
+
+                            const patientPhone =
+                                appointment.patient
+                                    ? appointment.patient.phone
+                                    : "-";
+
+
+                            const slot =
+                                appointment.slot;
+
+
+                            const startTime =
+                                slot
+                                    ? slot.startTime
+                                    : "-";
+
+
+                            const endTime =
+                                slot
+                                    ? slot.endTime
+                                    : "-";
+
+
+                            const appointmentDate =
+                                slot
+                                    ? slot.date
+                                    : date;
+
+
+                            container.innerHTML += `
+
+                                <div class="content-card"
+                                     style="
+                                         margin-bottom:15px;
+                                         border:1px solid #e5e7eb;
+                                     ">
+
+                                    <h3>
+                                        👤 ${patient}
+                                    </h3>
+
+                                    <p style="
+                                        margin-top:8px;
+                                    ">
+
+                                        📧 ${patientEmail}
+
+                                    </p>
+
+                                    <p>
+
+                                        📞 ${patientPhone}
+
+                                    </p>
+
+                                    <hr style="
+                                        margin:15px 0;
+                                        border:none;
+                                        border-top:1px solid #e5e7eb;
+                                    ">
+
+                                    <p>
+
+                                        📅 Date:
+                                        ${appointmentDate}
+
+                                    </p>
+
+                                    <p>
+
+                                        🕐 Time:
+                                        ${startTime}
+                                        -
+                                        ${endTime}
+
+                                    </p>
+
+                                    <p style="
+                                        margin-top:10px;
+                                    ">
+
+                                        <span class="status ${appointment.status.toLowerCase()}">
+
+                                            ${appointment.status}
+
+                                        </span>
+
+                                    </p>
+
+                                </div>
+
+                            `;
+
+                        }
+                    );
+
+                }
+
+                catch(error) {
+
+                    console.error(
+                        "Appointment loading error:",
+                        error
+                    );
+
+
+                    container.innerHTML = `
+
+                        <div style="
+                            text-align:center;
+                            padding:30px;
+                        ">
+
+                            <p style="color:red;">
+
+                                Unable to load appointments.
+
+                            </p>
+
+                        </div>
+
+                    `;
+
+                }
+
+            }
+        );
+
+
+
+    /* ==========================================
+       INITIAL LOAD
+    ========================================== */
+
+    loadDoctors();
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,13 @@
+package com.example.ClinicQ;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class ClinicQApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+
+}

@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>ClinicQ - Patient Dashboard</title>
+
+    <link rel="stylesheet"
+          href="/css/style.css">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<!-- =========================
+     SIDEBAR
+========================= -->
+
+<div class="sidebar">
+
+    <div class="sidebar-brand">
+        🏥 ClinicQ
+    </div>
+
+    <div class="sidebar-role">
+        PATIENT
+    </div>
+
+
+    <a href="/index.html"
+       class="sidebar-link">
+        🏠 Home
+    </a>
+
+
+    <a href="/admin-dashboard.html"
+       class="sidebar-link">
+        ⚙️ Admin
+    </a>
+
+
+    <a href="/doctor-dashboard.html"
+       class="sidebar-link">
+        👨‍⚕️ Doctor
+    </a>
+
+
+    <a href="/patient-dashboard.html"
+       class="sidebar-link active">
+        👤 Patient
+    </a>
+
+</div>
+
+
+<!-- =========================
+     MAIN CONTENT
+========================= -->
+
+<div class="main-content">
+
+
+    <!-- HEADER -->
+
+    <div class="top-header">
+
+        <div>
+
+            <h1>
+                Patient Dashboard
+            </h1>
+
+            <p>
+                Book and manage your doctor appointments
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         PATIENT INFORMATION
+    ========================== -->
+
+    <div class="content-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Patient Information
+                </h2>
+
+                <p>
+                    Enter your registered patient ID
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-grid">
+
+
+            <div class="form-group">
+
+                <label>
+                    Patient ID
+                </label>
+
+                <input
+                        type="number"
+                        id="patientId"
+                        value="1"
+                        min="1"
+                        placeholder="Enter patient ID">
+
+            </div>
+
+
+            <button
+                    type="button"
+                    id="loadAppointmentsBtn"
+                    class="btn primary-btn">
+
+                Load My Appointments
+
+            </button>
+
+
+        </div>
+
+
+        <!-- MESSAGE -->
+
+        <div id="appointmentMessage"
+             style="
+                 margin-top: 15px;
+                 font-weight: 600;
+             ">
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         AVAILABLE DOCTORS
+    ========================== -->
+
+    <div class="content-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Available Doctors
+                </h2>
+
+                <p>
+                    Choose a doctor for your appointment
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div id="doctorContainer"
+             class="stats-grid">
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         AVAILABLE SLOTS
+    ========================== -->
+
+    <div class="content-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Available Appointment Slots
+                </h2>
+
+                <p>
+                    Select a slot to book an appointment
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div id="slotContainer">
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         MY APPOINTMENTS
+    ========================== -->
+
+    <div class="content-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    My Appointments
+                </h2>
+
+                <p>
+                    Your booked appointments
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div id="myAppointmentsContainer">
+
+            <p>
+                Enter your Patient ID and click
+                "Load My Appointments".
+            </p>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- =========================
+     JAVASCRIPT
+========================= -->
+
+<script>
+
+
+    /* ==========================================
+       LOAD DOCTORS
+    ========================================== */
+
+    async function loadDoctors() {
+
+        const container =
+            document.getElementById(
+                "doctorContainer"
+            );
+
+
+        try {
+
+            const response =
+                await fetch("/api/doctors");
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Unable to load doctors"
+                );
+
+            }
+
+
+            const doctors =
+                await response.json();
+
+
+            container.innerHTML = "";
+
+
+            if (doctors.length === 0) {
+
+                container.innerHTML = `
+
+                    <p>
+                        No doctors available.
+                    </p>
+
+                `;
+
+                return;
+
+            }
+
+
+            doctors.forEach(doctor => {
+
+                container.innerHTML += `
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon blue">
+                            👨‍⚕️
+                        </div>
+
+                        <div>
+
+                            <span>
+                                Doctor
+                            </span>
+
+                            <strong>
+                                ${doctor.name}
+                            </strong>
+
+                            <p style="margin-top: 5px;">
+                                ${doctor.specialization}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        catch(error) {
+
+            console.error(
+                "Doctor loading error:",
+                error
+            );
+
+
+            container.innerHTML = `
+
+                <p>
+                    Unable to load doctors.
+                </p>
+
+            `;
+
+        }
+
+    }
+
+
+
+    /* ==========================================
+       LOAD AVAILABLE SLOTS
+    ========================================== */
+
+    async function loadSlots() {
+
+        const container =
+            document.getElementById(
+                "slotContainer"
+            );
+
+
+        try {
+
+            const response =
+                await fetch("/api/slots");
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Unable to load slots"
+                );
+
+            }
+
+
+            const slots =
+                await response.json();
+
+
+            const availableSlots =
+                slots.filter(
+                    slot =>
+                        slot.status === "AVAILABLE"
+                );
+
+
+            container.innerHTML = "";
+
+
+            if (availableSlots.length === 0) {
+
+                container.innerHTML = `
+
+                    <div style="
+                        text-align:center;
+                        padding:30px;
+                    ">
+
+                        <div style="
+                            font-size:40px;
+                        ">
+                            📅
+                        </div>
+
+                        <h3>
+                            No available slots
+                        </h3>
+
+                        <p>
+                            Please check again later.
+                        </p>
+
+                    </div>
+
+                `;
+
+                return;
+
+            }
+
+
+            availableSlots.forEach(slot => {
+
+                const doctorName =
+                    slot.doctor
+                        ? slot.doctor.name
+                        : "Unknown Doctor";
+
+
+                const specialization =
+                    slot.doctor
+                        ? slot.doctor.specialization
+                        : "";
+
+
+                container.innerHTML += `
+
+                    <div class="content-card"
+                         style="
+                             margin-bottom:15px;
+                             border:1px solid #e5e7eb;
+                         ">
+
+                        <h3>
+                            👨‍⚕️ ${doctorName}
+                        </h3>
+
+                        <p>
+                            ${specialization}
+                        </p>
+
+                        <p style="margin-top:10px;">
+
+                            📅 ${slot.date}
+
+                        </p>
+
+                        <p>
+
+                            🕐
+                            ${slot.startTime}
+                            -
+                            ${slot.endTime}
+
+                        </p>
+
+                        <p style="margin-top:10px;">
+
+                            <span class="status available">
+                                AVAILABLE
+                            </span>
+
+                        </p>
+
+
+                        <button
+                            type="button"
+                            class="btn primary-btn"
+                            style="margin-top:15px;"
+                            onclick="bookAppointment(${slot.id})">
+
+                            Book Appointment
+
+                        </button>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        catch(error) {
+
+            console.error(
+                "Slot loading error:",
+                error
+            );
+
+
+            container.innerHTML = `
+
+                <p>
+                    Unable to load appointment slots.
+                </p>
+
+            `;
+
+        }
+
+    }
+
+
+
+    /* ==========================================
+       BOOK APPOINTMENT
+    ========================================== */
+
+    async function bookAppointment(slotId) {
+
+        const patientId =
+            document.getElementById(
+                "patientId"
+            ).value;
+
+
+        if (!patientId) {
+
+            alert(
+                "Please enter your Patient ID first."
+            );
+
+            return;
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/appointments/book?patientId=${patientId}&slotId=${slotId}`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+
+            const result =
+                await response.text();
+
+
+            if (response.ok) {
+
+                alert(
+                    "Appointment booked successfully!"
+                );
+
+
+                /* Reload available slots */
+
+                await loadSlots();
+
+
+                /* Automatically load patient's appointments */
+
+                await loadMyAppointments();
+
+            }
+
+            else {
+
+                alert(
+                    "Unable to book appointment: "
+                    + result
+                );
+
+            }
+
+        }
+
+        catch(error) {
+
+            console.error(
+                "Booking error:",
+                error
+            );
+
+
+            alert(
+                "Unable to connect to the server."
+            );
+
+        }
+
+    }
+
+
+
+    /* ==========================================
+       LOAD MY APPOINTMENTS
+    ========================================== */
+
+    async function loadMyAppointments() {
+
+        const patientId =
+            document.getElementById(
+                "patientId"
+            ).value;
+
+
+        const container =
+            document.getElementById(
+                "myAppointmentsContainer"
+            );
+
+
+        const message =
+            document.getElementById(
+                "appointmentMessage"
+            );
+
+
+        /* Check Patient ID */
+
+        if (!patientId) {
+
+            message.innerHTML = `
+                Please enter a Patient ID.
+            `;
+
+            message.style.color = "red";
+
+            container.innerHTML = "";
+
+            return;
+
+        }
+
+
+        try {
+
+            message.innerHTML =
+                "Loading appointments...";
+
+            message.style.color = "#2563eb";
+
+
+            const response =
+                await fetch(
+                    `/api/appointments/patient/${patientId}`
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    result.message ||
+                    "Unable to load appointments"
+                );
+
+            }
+
+
+            container.innerHTML = "";
+
+
+            /* ==================================
+               NO APPOINTMENTS
+            ================================== */
+
+            if (result.length === 0) {
+
+                message.innerHTML =
+                    "No appointments found for Patient ID "
+                    + patientId
+                    + ".";
+
+                message.style.color = "#6b7280";
+
+
+                container.innerHTML = `
+
+                    <div style="
+                        text-align:center;
+                        padding:30px;
+                    ">
+
+                        <div style="
+                            font-size:40px;
+                        ">
+                            📋
+                        </div>
+
+                        <h3>
+                            No Appointments Found
+                        </h3>
+
+                        <p>
+                            Patient ${patientId}
+                            has no booked appointments.
+                        </p>
+
+                    </div>
+
+                `;
+
+                return;
+
+            }
+
+
+            /* ==================================
+               APPOINTMENTS FOUND
+            ================================== */
+
+            message.innerHTML =
+                result.length
+                + " appointment(s) found.";
+
+            message.style.color = "#16a34a";
+
+
+            result.forEach(appointment => {
+
+                const patient =
+                    appointment.patient
+                        ? appointment.patient.name
+                        : "Unknown Patient";
+
+
+                const slot =
+                    appointment.slot;
+
+
+                const doctor =
+                    slot && slot.doctor
+                        ? slot.doctor.name
+                        : "Unknown Doctor";
+
+
+                const specialization =
+                    slot && slot.doctor
+                        ? slot.doctor.specialization
+                        : "";
+
+
+                const date =
+                    slot
+                        ? slot.date
+                        : "-";
+
+
+                const time =
+                    slot
+                        ? slot.startTime
+                          + " - "
+                          + slot.endTime
+                        : "-";
+
+
+                container.innerHTML += `
+
+                    <div class="content-card"
+                         style="
+                             margin-bottom:15px;
+                             border:1px solid #e5e7eb;
+                         ">
+
+                        <h3>
+                            👨‍⚕️ ${doctor}
+                        </h3>
+
+                        <p>
+                            ${specialization}
+                        </p>
+
+                        <hr style="
+                            margin:15px 0;
+                            border:none;
+                            border-top:1px solid #e5e7eb;
+                        ">
+
+                        <p>
+                            👤 Patient:
+                            ${patient}
+                        </p>
+
+                        <p>
+                            📅 Date:
+                            ${date}
+                        </p>
+
+                        <p>
+                            🕐 Time:
+                            ${time}
+                        </p>
+
+                        <p style="margin-top:10px;">
+
+                            <span class="status ${appointment.status.toLowerCase()}">
+
+                                ${appointment.status}
+
+                            </span>
+
+                        </p>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        catch(error) {
+
+            console.error(
+                "Appointment loading error:",
+                error
+            );
+
+
+            message.innerHTML =
+                "Unable to load appointments.";
+
+            message.style.color = "red";
+
+
+            container.innerHTML = `
+
+                <p style="color:red;">
+
+                    Error loading appointments.
+                    Please check the server.
+
+                </p>
+
+            `;
+
+        }
+
+    }
+
+
+
+    /* ==========================================
+       BUTTON EVENT
+    ========================================== */
+
+    document
+        .getElementById(
+            "loadAppointmentsBtn"
+        )
+        .addEventListener(
+            "click",
+            function() {
+
+                loadMyAppointments();
+
+            }
+        );
+
+
+
+    /* ==========================================
+       INITIAL LOAD
+    ========================================== */
+
+    loadDoctors();
+
+    loadSlots();
+
+</script>
+
+
+</body>
+
+</html>
